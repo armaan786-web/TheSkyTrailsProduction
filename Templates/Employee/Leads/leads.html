@@ -72,8 +72,11 @@
                             {% comment %} <th>Notes</th> {% endcomment %}
                             {% comment %} <th>Assign to Emp</th> {% endcomment %}
                             <th>Created By</th>
+                            <th>Notes</th>
+                            
                             <th>Enquiry Status</th>
-                            <th>Lead Status</th>
+                            <th>Done</th>
+                            <th>Resend</th>
 										</tr>
 									</thead>
 									<tfoot>
@@ -91,8 +94,10 @@
                             {% comment %} <th>Notes</th> {% endcomment %}
                             {% comment %} <th>Assign to Emp</th> {% endcomment %}
                             <th>Created By</th>
+                            <th>Notes</th>
                             <th>Enquiry Status</th>
-                            <th>Lead Status</th>
+                            <th>Done</th>
+                            <th>Resend</th>
 										</tr>
 									</tfoot>
 									<tbody>
@@ -152,6 +157,34 @@
                            </td>  {% endcomment %}
                            
                            <td>{{i.created_by}}</td>
+                           
+                           <td> 
+                                                {% comment %} {{notes}} {% endcomment %}
+                                                {% comment %} {% if i.id == notes_first.enquiry %}
+                                                hellooooo
+                                                {% endif %} {% endcomment %}
+                                                {% if i.notes_set.exists %}
+                                        
+                                                <p><span class="text-warning">Notes:</span> {{ i.notes_set.last.notes|truncatechars:10 }}</p>
+
+                                                {% comment %} Notes:{{ i.notes_set.last.notes|slice:":5"|safe }}... {% endcomment %}
+
+                                                
+                                            {% else %}
+                                                No Notes
+                                            {% endif %}
+                                            {% if i.lead_status == "Reject" %}
+                           <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#updatenotes{{i.id}}" style="border:none; width: 135px;" disabled>Add Notes</button>
+                           {% else %}
+                           <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#updatenotes{{i.id}}" style="border:none; width: 135px;">Add Notes</button>
+                           
+                           {% endif %}
+                           <button type="button" class="btn btn-warning pt-2" data-toggle="modal" data-target="#viewallnotes{{i.id}}" style="border:none;  white-space: nowrap; width: 135px; margin-top:4px;">
+                                
+                                View All Notes
+                            </button> 
+                           </td>
+                           
                            <td>
 
                               {% if i.lead_status == "Active" %}
@@ -195,7 +228,7 @@
                                  <input type="text" value="New Lead" name="accept" hidden>
                                  <input type="text" value="{{i.id}}" name="enq_id" hidden >
                               <span style="font-size: 15px; width:100%;" class="badge badge-pill badge-success"><button type="submit" class="btn btn-success">Accept</button></span>
-                           </form>
+                                </form>
                               
                               
                               {% else %}
@@ -208,28 +241,55 @@
                                  <div class="ml-2 " >
                                     
                                     {% comment %} <input type="hidden" value="{{i.id}}" name="enq_id"> {% endcomment %}
-                                    {% if dep == "Sales" %}
+                                    {% comment %} {% if dep == "Sales" %}
                                     {% if i.lead_status == "PreEnrolled" %}
-                                    <a href="{% url "enrolled_save" i.id %}"><button class="btn btn-primary">Done</button></a>                        
+                                    <a href="{% url "enrolled_save" i.id %}"><button class="btn btn-primary" style="width:98px;">Done</button></a>                        
+                                    <a href="{% url "reject_save" i.id %}"><button class="btn btn-danger" style="width:98px; margin-top:2px">Reject</button></a>
                                      
                                     {% else %}
                                     <button class="btn btn-primary" disabled>Done</button>
                                     {% endif %}
-                                    {% endif %}
-                                    {% if dep == "Presales/Assesment" %}
-                                    {% if i.lead_status == "PreEnrolled" %}
-                                    <button class="btn btn-primary" disabled>Done</button>
-                                    {% else %}
-                                    <a href="{% url "preenrolled_save" i.id %}"><button class="btn btn-primary">Done</button></a>
+                                    {% endif %} {% endcomment %}
 
+                                    {% if dep == "Sales" %}
+                                    {% if i.lead_status == "PreEnrolled" %}
+                                    <a href="{% url "enrolled_save" i.id %}"><button class="btn btn-primary" style="width:98px;">Done</button></a>                        
+                                    <a href="{% url "reject_save" i.id %}"><button class="btn btn-danger" style="width:98px; margin-top:2px">Reject</button></a>
+                                    {% elif i.lead_status == "Reject"  %}
+                                    <button class="btn btn-danger" style="width:98px; margin-top:2px" disabled>Reject</button>
+                                    {% else %}
+                                    <button class="btn btn-primary" disabled>Done</button>
+                                    
                                     {% endif %}
                                     
                                     {% endif %}
+
+
+
+
+                                    {% if dep == "Presales/Assesment" %}
+                                    {% if i.lead_status == "PreEnrolled" %}
+                                    <button class="btn btn-primary" disabled>Done</button>
+                                    {% elif i.lead_status == "Reject" %}
+                                    <button class="btn btn-danger" disabled>Reject</button>
+                                    {% else %}
+                                    <a href="{% url "preenrolled_save" i.id %}"><button class="btn btn-primary" style="width:98px;">Done</button></a>
+                                    <a href="{% url "reject_save" i.id %}"><button class="btn btn-danger" style="width:98px; margin-top:2px">Reject</button></a>
+                                     {% comment %} <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#updatenotes{{i.id}}" style="border:none;">Send</button> {% endcomment %}
+
+                           
+                                    {% endif %}
+                                    
+                                    {% endif %}
+
                                     {% if dep == "Documentation" %}
                                     {% comment %} <button class="btn btn-primary">Done</button> {% endcomment %}
                                     {% if i.lead_status == "Enrolled" %}
                                     
                                     <a href="{% url "enprocess_save" i.id %}"><button class="btn btn-primary">Done</button></a>
+                                    <a href="{% url "reject_save" i.id %}"><button class="btn btn-danger" style="width:98px; margin-top:2px">Reject</button></a>
+                                    {% elif i.lead_status == "Reject" %}
+                                    <button class="btn btn-danger" disabled>Reject</button>
                                     {% else %}
                                     <button class="btn btn-primary" disabled>Done</button>
 
@@ -238,6 +298,9 @@
                                     {% if dep == "VisaTeam" %}
                                     {% if i.lead_status == "Inprocess" %}
                                     <a href="{% url "ready_to_submit_save" i.id %}"><button class="btn btn-primary">Ready To Submit</button></a>
+                                    <a href="{% url "reject_save" i.id %}"><button class="btn btn-danger" style="width:170px; margin-top:2px">Reject</button></a>
+                                    {% elif i.lead_status == "Reject" %}
+                                    <button class="btn btn-danger" disabled style="width:150px;">Reject</button>
                                     {% elif i.lead_status == "Ready To Submit" %}
                                     <a href="{% url "appointment_save" i.id %}"><button class="btn btn-primary">Appointment</button></a>
                                     {% elif i.lead_status == "Appointment" %}
@@ -251,80 +314,49 @@
                                     
                                     {% endif %}
                                     {% endif %}
+                               
                                      
                                  </div>
                              
                              {% endif %}
                              {% include "Employee/Leads/lead_status_modal.html" %}
-                           </td>
+                              {% include "Employee/Leads/add_notes_modal.html" %}
+                            </td>
+                            <td>
+                            {% if dep == "Sales" %}
+                            {% if i.lead_status == "Reject" %}
+                            <button class="btn btn-warning" disabled>Presales Department</button>
+                            {% elif i.lead_status == "Enrolled" %}
+                            <button class="btn btn-warning" disabled>Documentation Department</button>
+                            {% elif i.lead_status == "PreEnrolled" %}
+                            <button class="btn btn-warning" disabled>Waiting..</button>
+                            {% comment %} <a href="{% url "preenrolled_save" i.id %}"><Button class="btn btn-warning">Resendddddd</Button></a> {% endcomment %}
+                            {% else %}
+                            <Button class="btn btn-warning" disabled>Visa Department</Button>
+                            
+                            {% endif %}
+                            {% endif %}
+                            {% if dep == "Documentation" %}
+                            {% if i.lead_status == "Reject" %}
+                            <button class="btn btn-primary" disabled>Presales Department</button>
+                            {% elif i.lead_status == "Enrolled" %}
+                            <button class="btn btn-primary" disabled>Waiting...</button>
+                            {% else %}
+                            <button class="btn btn-primary" disabled>Visa Department</button>
+                            {% endif %}
+                            {% endif %}
+                            </td>
+                            
 
                            
                         </tr>
 
-                       <div class="modal fade" id="updatenotes{{i.id}}" tabindex="-1" role="dialog" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <form action="{% url "add_notes" %}" method="POST" enctype="multipart/form-data">
-                                {% csrf_token %}
-                                {% comment %} {% csrf_token %} {% endcomment %}
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Add Notes</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">	<span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    {% comment %} <span class="sub-text d-flex">Date :
-                                        <div class="ml-1" id="currentDateTime"></div>
-                                    </span> {% endcomment %}
-
-                                        <div class="col-12 col-md-8">
-                                            <div class="form-group">
-                                                <div class="control-label mb-10">
-                                                    <span class="sub-text d-flex">Date :
-                                                     <div class="ml-1" id="currentDateTime"></div>
-                                                    </span>
-                                                    <span class="sub-text d-flex">Note added by : Admin
-                                                        
-                                                    </span>
-                                                </div>
-                                            </div>
-                
-                                        </div>
-                                       
-                                 
-                                        <div class="col-12">
-                                            <div class="form-group">
-                                                <div class="control-label mb-10">
-                                                    <textarea name="notes" rows="4" cols="20" id="ContentPlaceHolder1_txtNotes" class="form-control" placeholder="Add Notes" onkeypress="checkMaxLength(this, 120);" onpaste="handlePaste(this, 120)" oninput="updateCharacterCount(this,120);" maxlength="120"></textarea>
-                                                    <span id="ContentPlaceHolder1_rfnotes" style="color:Red;display:none;">Enter Notes</span>
-                                                    <p id="characterCount">Character Limit: 120</p>
-                                                    <input type="hidden" name="ctl00$ContentPlaceHolder1$hfEId" id="ContentPlaceHolder1_hfEId">
-                                                    
-                                                    <div class="custom-file-link text-left mt-3 mb-3">
-                                                        <label class="uploadFile">
-                                                            <em class="icon ni ni-clip mr-1 text-primary"></em>
-                                                            <span class="filename">Attach File</span>
-                                                            
-                                                            <input type="file" name="file" id="ContentPlaceHolder1_fuNotesFile" class="inputfile form-control" onchange="displayFileName(this)">
-                                                        </label>
-                                                    </div>
-                                                    <input type="text" value="{{i.id}}" name="enq_id" hidden>
-                                                   
-                                                </div>
-                                            </div>
-                                        </div>
-                                    
-                                </div>
-                                <div class="modal-footer">
-                                 <button type="submit" class="btn btn-default" data-dismiss="modal">Close</button>
-                                 <button type="submit" class="btn btn-primary">Save</button>
-                             </div>
-                            </div>
-                        </form>
-                        </div>
-                    </div>
+                        {% include "Employee/Leads/sales_send_modals.html" %}
+                        
                         
                         {% endfor %}
+                       
+                        
 									</tbody>
 								</table>
 							</div>

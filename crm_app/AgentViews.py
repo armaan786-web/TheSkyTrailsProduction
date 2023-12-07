@@ -202,8 +202,10 @@ def update_lead_status(request):
         enq.lead_status = "Active"
         enq.save()
         if enq.lead_status == "Active":
+            print("workkkkkkkkk")
             last_assigned_index = cache.get("last_assigned_index") or 0
             presale_team_employees = get_department_Presales_employee()
+            print("helloooo", presale_team_employees)
             if presale_team_employees.exists():
                 next_index = (last_assigned_index + 1) % presale_team_employees.count()
                 enq.assign_to_employee = presale_team_employees[next_index]
@@ -922,3 +924,12 @@ class AgentPackageEnquiryCreateView(LoginRequiredMixin, CreateView):
         enquiry_id = self.object.id
 
         return reverse_lazy("Agent_Document", kwargs={"id": enquiry_id})
+
+
+def resend(request, id):
+    print("workingggggggg")
+    enq_id = Enquiry.objects.get(id=id)
+    print("enqurryyy id", enq_id)
+    enq_id.lead_status = "Active"
+    enq_id.save()
+    return redirect("agent_leads")

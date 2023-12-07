@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path , include
+from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib.auth import views as auth_views
@@ -23,36 +23,49 @@ from django.views.generic import TemplateView
 from crm_app.views import *
 from django.views.static import serve
 from django.urls import re_path
+
+
 def trigger_error(request):
     division_by_zero = 1 / 0
 
-urlpatterns = [
-    path('sentry-debug/', trigger_error),
-    re_path('media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
-    re_path('static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
-    path('admin/', admin.site.urls),
 
-    path('Signup/', agent_signup,name="agent_signup"),
-    path('', CustomLoginView, name='login'),
-    path("OTP", verify_otp, name="verify_otp"),
-    path("ResendOTP", resend_otp, name="resend_otp"),
-    path("forgot/Password", forgot_psw, name="forgot_psw"),
-    path("Forget/Verify/OTP/", forget_otp, name="forget_otp"),
-    path("dashboard/", DashboardView.as_view() , name='dashboard'),
-    path("ResetPassword/", reset_psw, name="reset_psw"),
-    # path('logout_user', logout_user,name="logout"),
+urlpatterns = (
+    [
+        path("sentry-debug/", trigger_error),
+        re_path("media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
+        re_path("static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}),
+        path("admin/", admin.site.urls),
+        path("Signup/", agent_signup, name="agent_signup"),
+        path("", CustomLoginView, name="login"),
+        path("OTP", verify_otp, name="verify_otp"),
+        path("ResendOTP", resend_otp, name="resend_otp"),
+        path("forgot/Password", forgot_psw, name="forgot_psw"),
+        path("Forget/Verify/OTP/", forget_otp, name="forget_otp"),
+        path("dashboard/", DashboardView.as_view(), name="dashboard"),
+        path("ResetPassword/", reset_psw, name="reset_psw"),
+        # path('logout_user', logout_user,name="logout"),
+        # path('', include('account.urls')),
+        path("crm/", include("crm_app.superAdmin_urls")),
+        path("Admin/", include("crm_app.Admin_urls")),
+        path("Agent/", include("crm_app.Agent_urls")),
+        path("Employee/", include("crm_app.Employee_urls")),
+        path(
+            "enquiry_form/",
+            BookingViewSet.as_view({"get": "list", "post": "create"}),
+            name="enquiry",
+        ),
+        path("FrontWebsite/", FrontWebsite.as_view({"get": "list", "post": "create"})),
+        path("Api/VisaCountry/", apiVisaCountry.as_view({"get": "list"})),
+        path("Api/VisaCategory/", apiVisaCategory.as_view({"get": "list"})),
+        path("chattt/", chats, name="chat"),
+        path(
+            "get_group_chat_messages/",
+            get_group_chat_messages,
+            name="get_group_chat_messages",
+        ),
+    ]
+    + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+)
 
-    # path('', include('account.urls')),
-    path('crm/', include('crm_app.superAdmin_urls')),
-    path('Admin/', include('crm_app.Admin_urls')),
-    path('Agent/', include('crm_app.Agent_urls')),
-    path('Employee/', include('crm_app.Employee_urls')),
-    path("enquiry_form/", BookingViewSet.as_view({'get': 'list', 'post': 'create'}),name="enquiry"),
-    
-    path("chattt/", chats, name="chat"),
-    path("get_group_chat_messages/",get_group_chat_messages,name="get_group_chat_messages"),
-    
-]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-handler404 = 'crm_app.views.Error404'
-
+handler404 = "crm_app.views.Error404"

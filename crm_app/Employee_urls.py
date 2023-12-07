@@ -6,6 +6,8 @@ urlpatterns = [
     path("AddLeads/", EmployeeEnquiryCreateView.as_view(), name="addemployee_leads"),
     path("AllLeads/", employee_leads, name="employee_leads"),
     path("PreEnrolled/Save/<int:id>/", preenrolled_save, name="preenrolled_save"),
+    path("Reject/Save/<int:id>/", reject_save, name="reject_save"),
+    path("Resend/Save/<int:id>/", resend_save, name="empresend"),
     path("Enrolled/Save/<int:id>/", enrolled_save, name="enrolled_save"),
     path("Enprocess/Save/<int:id>/", enprocess_save, name="enprocess_save"),
     path(

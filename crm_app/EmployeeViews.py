@@ -184,6 +184,7 @@ class EmployeeEnquiryCreateView(LoginRequiredMixin, CreateView):
                 next_index = (last_assigned_index + 1) % presale_employees.count()
                 form.instance.assign_to_employee = presale_employees[next_index]
                 form.instance.assign_to_visa_team_employee = self.request.user.employee
+                cache.set("last_assigned_index", next_index)
 
         form.instance.created_by = self.request.user
         # form.instance.assign_to_employee = self.request.user.employee
@@ -198,7 +199,8 @@ class EmployeeEnquiryCreateView(LoginRequiredMixin, CreateView):
             whatsapp_response = send_whatsapp_message(api_key, mobile, message)
 
             if whatsapp_response.status_code == 200:
-                messages.success(self.request, "Enquiry Added Successfully.")
+                print("successs")
+                # messages.success(self.request, "Enquiry Added Successfully.")
             else:
                 pass
         return super().form_valid(form)
@@ -249,17 +251,60 @@ def employee_leads(request):
 
     user = request.user
     created_enq = Enquiry.objects.filter(created_by=user).order_by("-id")
+
     if user.is_authenticated:
+        # Check if the user is an Agent or Outsourcing Agent
         if user.user_type == "3":
-            enq = Enquiry.objects.filter(Q(assign_to_employee=user.employee))
+            emp = user.employee
+            dep = emp.department.name
+            department = Department.objects.get(name=dep)
+            notes = Notes.objects.all()
+            notes_first = Notes.objects.order_by("-id").first()
+            # latestnotes = notes.objects.order_by("-id").first()
+
+            if dep == "Sales":
+                # If the user is an Agent, filter by assign_to_agent
+
+                enq = Enquiry.objects.filter(Q(assign_to_sales_employee=user.employee))
+            if dep == "Presales/Assesment":
+                enq = Enquiry.objects.filter(Q(assign_to_employee=user.employee))
+            if dep == "Documentation":
+                enq = Enquiry.objects.filter(
+                    Q(assign_to_documentation_employee=user.employee)
+                )
+            if dep == "VisaTeam":
+                print("visaaaaaaaaaaaaaaaaaaaaaaaaaa", dep)
+                enq = Enquiry.objects.filter(
+                    Q(assign_to_visa_team_employee=user.employee)
+                )
 
         else:
+            # Handle other user types as needed
             enq = None
         combined_enq = enq | created_enq
 
-        context = {"assigned_menus": assigned_menus, "enq": combined_enq}
+        context = {
+            "assigned_menus": assigned_menus,
+            "enq": combined_enq,
+            "dep": dep,
+            "notes": notes,
+        }
 
         return render(request, "Employee/Leads/leads.html", context)
+
+
+def reject_save(request, id):
+    enquiry = Enquiry.objects.get(id=id)
+    enquiry.lead_status = "Reject"
+    enquiry.save()
+    return redirect("employee_leads")
+
+
+def resend_save(request, id):
+    enquiry = Enquiry.objects.get(id=id)
+    enquiry.lead_status = "PreEnrolled"
+    enquiry.save()
+    return redirect("employee_leads")
 
 
 def preenrolled_save(request, id):
@@ -296,7 +341,6 @@ def preenrolled_save(request, id):
     else:
         last_assigned_index = cache.get("last_assigned_index") or 0
         saleteam_employees = get_sale_employee()
-        print("salessssssss demoo", saleteam_employees)
 
         next_index = (last_assigned_index + 1) % saleteam_employees.count()
         enquiry.assign_to_sales_employee = saleteam_employees[next_index]
@@ -3268,10 +3312,6 @@ def agent_emp_lead_enquiry(request):
     return redirect("agentall_leads")
 
 
-def get_visa_team_employee():
-    return Employee.objects.filter(department__name="Visa Team")
-
-
 @login_required
 def add_notes(request):
     if request.method == "POST":
@@ -3300,7 +3340,7 @@ def add_notes(request):
             # Handle the case where the Enquiry with the given ID does not exist
             pass  # You can add appropriate error handling here if needed
 
-    return redirect("agentall_leads")
+    return redirect("employee_leads")
 
 
 class profileview(TemplateView, LoginRequiredMixin):

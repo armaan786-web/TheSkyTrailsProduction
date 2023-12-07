@@ -99,7 +99,7 @@ admin.site.register(Employee, EmployeeAdmin)
 
 
 class AgentAdmin(admin.ModelAdmin):
-    list_display = "users", "contact_no"
+    list_display = "users", "contact_no", "assign_employee"
 
 
 admin.site.register(Agent, AgentAdmin)

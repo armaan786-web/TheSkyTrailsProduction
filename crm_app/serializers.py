@@ -26,4 +26,12 @@ class VisaCategorySerializer(serializers.ModelSerializer):
 class FrontWebsiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = FrontWebsiteEnquiry
-        fields = ['name','email','phone','country_name','category_name','message','image']
+        fields = [
+            "name",
+            "email",
+            "phone",
+            "country_name",
+            "category_name",
+            "message",
+            "image",
+        ]

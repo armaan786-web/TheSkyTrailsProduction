@@ -12,8 +12,23 @@ from .models import CustomUser
 from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 from rest_framework import viewsets
-from .models import Booking, ChatGroup, ChatMessage,FrontWebsiteEnquiry,VisaCountry,VisaCategory,Admin, Employee,Agent
-from .serializers import BookingSerializer,FrontWebsiteSerializer
+from .models import (
+    Booking,
+    ChatGroup,
+    ChatMessage,
+    FrontWebsiteEnquiry,
+    VisaCountry,
+    VisaCategory,
+    Admin,
+    Employee,
+    Agent,
+)
+from .serializers import (
+    BookingSerializer,
+    FrontWebsiteSerializer,
+    VisaCountrySerializer,
+    VisaCategorySerializer,
+)
 from rest_framework.viewsets import ViewSet, ModelViewSet
 import random
 from django.db.utils import IntegrityError
@@ -26,9 +41,10 @@ from django.contrib.auth import authenticate
 class DashboardView(TemplateView):
     template_name = "SuperadminDashboard/index2.html"
 
+
 class TravelDashboard(TemplateView):
     template_name = "dashboard/index2.html"
-        
+
 
 def get_public_ip():
     try:
@@ -36,10 +52,9 @@ def get_public_ip():
         data = response.json()
         return data["ip"]
     except Exception as e:
-        
         return None
-        
-        
+
+
 def agent_signup(request):
     if request.method == "POST":
         user_type = request.POST.get("type")
@@ -71,7 +86,7 @@ def agent_signup(request):
 
                 user.save()
                 messages.success(request, "OutsourceAgent Added Successfully")
-                
+
                 api_key = "c255bc3cfea34fe588a61dc3c1fe642e"
                 mobile = contact_no
                 message = "Welcome to skytrails "
@@ -82,7 +97,7 @@ def agent_signup(request):
                 else:
                     print(f"Request failed with status code {response.status_code}")
                     print("Response:", response.text)
-                
+
                 subject = "Congratulations! Your Account is Created"
                 message = (
                     f"Hello {firstname} {lastname},\n\n"
@@ -100,7 +115,7 @@ def agent_signup(request):
                 send_mail(
                     subject, message, from_email=None, recipient_list=recipient_list
                 )
-                
+
                 request.session["username"] = email
                 request.session["password"] = password
 
@@ -120,7 +135,7 @@ def agent_signup(request):
                 user2.save()
 
                 messages.success(request, "Agent Added Successfully")
-                
+
                 api_key = "c255bc3cfea34fe588a61dc3c1fe642e"
                 mobile = contact_no
                 message = "Welcome to skytrails "
@@ -131,7 +146,7 @@ def agent_signup(request):
                 else:
                     print(f"Request failed with status code {response.status_code}")
                     print("Response:", response.text)
-                
+
                 subject = "Congratulations! Your Account is Created"
                 message = (
                     f"Hello {firstname} {lastname},\n\n"
@@ -149,7 +164,7 @@ def agent_signup(request):
                 send_mail(
                     subject, message, from_email=None, recipient_list=recipient_list
                 )
-                
+
                 request.session["username"] = email
                 request.session["password"] = password
 
@@ -171,7 +186,7 @@ def agent_signup(request):
                 "number": contact_no,
                 "message": f"Use this OTP {send_otp} to login to your theskytrails account",
             }
-            print("send otp" , send_otp)
+            print("send otp", send_otp)
             response = requests.post(url, data=payload)
 
             return redirect("verify_otp")
@@ -181,7 +196,6 @@ def agent_signup(request):
             messages.error(request, f"An error occurred: {str(e)}")
 
     return render(request, "account/agent_signup.html")
-
 
 
 def CustomLoginView(request):
@@ -205,7 +219,7 @@ def CustomLoginView(request):
                         login(request, user)
                         return redirect("/crm/dashboard/")
 
-                elif user_type in ("2", "3","4","5"):
+                elif user_type in ("2", "3", "4", "5"):
                     public_ip = get_public_ip()
                     LoginLog.objects.create(
                         user=user,
@@ -225,10 +239,10 @@ def CustomLoginView(request):
 
                     if user_type == "3":
                         mob = customeruser.employee.contact_no
-                        
+
                     if user_type == "4":
                         mob = customeruser.agent.contact_no
-                        
+
                     if user_type == "5":
                         mob = customeruser.outsourcingagent.contact_no
 
@@ -244,7 +258,7 @@ def CustomLoginView(request):
                         "number": mob,
                         "message": f"Use this OTP {send_otp} to login to your. theskytrails account",
                     }
-                    response = requests.post(url, data=payload)
+                    # response = requests.post(url, data=payload)
 
                     # send_otp_and_redirect(request, user_id, user_type)
                     # return redirect("verify_otp")
@@ -263,51 +277,49 @@ def CustomLoginView(request):
 
     return render(request, "account/newlogin.html")
 
+
 def resend_otp(request):
-        username = request.session.get("username")
-        password = request.session.get("password")
+    username = request.session.get("username")
+    password = request.session.get("password")
 
-        if username and password:
-            try:
-                user = CustomUser.objects.get(username=username)
+    if username and password:
+        try:
+            user = CustomUser.objects.get(username=username)
 
-                # Verify the user's password
-                if check_password(password, user.password):
-                    user_type = user.user_type
+            # Verify the user's password
+            if check_password(password, user.password):
+                user_type = user.user_type
 
-                    # Rest of your logic for user types and sending OTP
-                    if user_type in ("2", "3", "4", "5"):
-                        mob = ""
+                # Rest of your logic for user types and sending OTP
+                if user_type in ("2", "3", "4", "5"):
+                    mob = ""
 
-                        if user_type == "2":
-                            mob = user.admin.contact_no
-                        elif user_type == "3":
-                            mob = user.employee.contact_no
-                        elif user_type == "4":
-                            mob = user.agent.contact_no
-                        elif user_type == "5":
-                            mob = user.outsourcingagent.contact_no
+                    if user_type == "2":
+                        mob = user.admin.contact_no
+                    elif user_type == "3":
+                        mob = user.employee.contact_no
+                    elif user_type == "4":
+                        mob = user.agent.contact_no
+                    elif user_type == "5":
+                        mob = user.outsourcingagent.contact_no
 
-                        random_number = random.randint(0, 999)
-                        send_otp = str(random_number).zfill(4)
-                        request.session["sendotp"] = send_otp
-                        
+                    random_number = random.randint(0, 999)
+                    send_otp = str(random_number).zfill(4)
+                    request.session["sendotp"] = send_otp
 
-                        url = "http://sms.txly.in/vb/apikey.php"
-                        payload = {
-                            "apikey": "lbwUbocDLNFjenpa",
-                            "senderid": "SKTRAL",
-                            "templateid": "1007338024565017323",
-                            "number": mob,
-                            "message": f"Use this OTP {send_otp} to login to your. theskytrails account",
-                        }
-                        response = requests.post(url, data=payload)
-                        return redirect("verify_otp")
-                       
+                    url = "http://sms.txly.in/vb/apikey.php"
+                    payload = {
+                        "apikey": "lbwUbocDLNFjenpa",
+                        "senderid": "SKTRAL",
+                        "templateid": "1007338024565017323",
+                        "number": mob,
+                        "message": f"Use this OTP {send_otp} to login to your. theskytrails account",
+                    }
+                    response = requests.post(url, data=payload)
+                    return redirect("verify_otp")
 
-            except CustomUser.DoesNotExist:
-                pass  
-
+        except CustomUser.DoesNotExist:
+            pass
 
 
 def verify_otp(request):
@@ -320,7 +332,6 @@ def verify_otp(request):
             "password", "Default value if key does not exist"
         )
         sendotp = request.session.get("sendotp", "Default value if key does not exist")
-
 
         submitted_otp = request.POST.get("submitted_otp")
 
@@ -351,7 +362,6 @@ def verify_otp(request):
             messages.error(request, "Wrong Otp")
 
     return render(request, "account/otp_verify.html")
-
 
 
 def forgot_psw(request):
@@ -420,12 +430,8 @@ def forget_otp(request):
     return render(request, "Authentication/forget_otp_verify.html")
 
 
-
 def reset_psw(request):
     user_id = request.session.get("user_id", "Default value if key does not exist")
-    
-   
-   
 
     if request.method == "POST":
         new_psw = request.POST.get("new_psw")
@@ -442,11 +448,9 @@ def reset_psw(request):
                 user_instance.save()
 
                 messages.success(request, "Password Reset Successfully....")
-                
+
                 return redirect("login")
             except Exception as e:
-                
-
                 messages.error(request, f"An error occurred: {e}")
 
         else:
@@ -459,25 +463,31 @@ def logout_user(request):
     logout(request)
     return HttpResponseRedirect("/")
 
+
 def Error404(request, exception):
-    return render(request,'404.html')
-    
-    
+    return render(request, "404.html")
 
 
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
-    
-    
+
 
 class FrontWebsite(ModelViewSet):
     queryset = FrontWebsiteEnquiry.objects.all()
     serializer_class = FrontWebsiteSerializer
 
-    
 
- 
+class apiVisaCountry(ModelViewSet):
+    queryset = VisaCountry.objects.all()
+    serializer_class = VisaCountrySerializer
+
+
+class apiVisaCategory(ModelViewSet):
+    queryset = VisaCategory.objects.all()
+    serializer_class = VisaCategorySerializer
+
+
 def chats(request):
     user = request.user
     user_type = user.user_type
@@ -502,8 +512,6 @@ def chats(request):
     return render(request, "chat/chat.html", context)
 
 
-
-
 from django.template import loader
 
 
@@ -523,4 +531,3 @@ def get_group_chat_messages(request):
 
     chat_content = loader.render_to_string("chat/group_chat_content.html", context)
     return HttpResponse(chat_content)
-

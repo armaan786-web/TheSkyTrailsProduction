@@ -56,7 +56,7 @@ class Department(models.Model):
         ("Presales/Assesment", "Presales/Assesment"),
         ("Sales", "Sales"),
         ("Documentation", "Documentation"),
-        ("Visa Team", "Visa Team"),
+        ("VisaTeam", "VisaTeam"),
         ("HR", "HR"),
     )
 
@@ -493,17 +493,22 @@ class Agent(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        if not self.assign_employee:
-            last_assigned_index = cache.get("last_assigned_index") or 0
-            # If no student is assigned, find the next available student in a circular manner
-            sales_team_employees = Employee.objects.filter(department__name="Sales")
-            if sales_team_employees.exists():
-                next_index = (last_assigned_index + 1) % sales_team_employees.count()
-                self.assign_employee = sales_team_employees[next_index]
-                self.assign_employee.save()
-                cache.set("last_assigned_index", next_index)
+        last_assigned_index = cache.get("last_assigned_index") or 0
+        # If no student is assigned, find the next available student in a circular manner
+        sales_team_employees = Employee.objects.filter(department__name="Sales")
+        print("salesssss", sales_team_employees)
+
+        if sales_team_employees.exists():
+            next_index = (last_assigned_index + 1) % sales_team_employees.count()
+            self.assign_employee = sales_team_employees[next_index]
+            self.assign_employee.save()
+            print("ssssssss", self.assign_employee)
+            cache.set("last_assigned_index", next_index)
 
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.users.username
 
 
 class OutSourcingAgent(models.Model):
@@ -560,19 +565,6 @@ class OutSourcingAgent(models.Model):
     registration_certificate = models.FileField(
         upload_to="media/Agent/Kyc", null=True, blank=True
     )
-
-    def save(self, *args, **kwargs):
-        if not self.assign_employee:
-            last_assigned_index = cache.get("last_assigned_index") or 0
-            # If no student is assigned, find the next available student in a circular manner
-            sales_team_employees = Employee.objects.filter(department__name="Sales")
-            if sales_team_employees.exists():
-                next_index = (last_assigned_index + 1) % sales_team_employees.count()
-                self.assign_employee = sales_team_employees[next_index]
-                self.assign_employee.save()
-                cache.set("last_assigned_index", next_index)
-
-        super().save(*args, **kwargs)
 
 
 leads_status = [
@@ -894,7 +886,7 @@ class Notes(models.Model):
     )
     notes = models.CharField(max_length=255)
     file = models.FileField(upload_to="media/Notes/", null=True, blank=True)
-    ip_address = models.GenericIPAddressField()
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
     created_by = models.ForeignKey(
         CustomUser, on_delete=models.SET_NULL, null=True, blank=True
     )
